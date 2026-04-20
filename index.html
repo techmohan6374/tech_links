@@ -94,6 +94,14 @@
                         {{ listView ? 'Grid' : 'List' }} View
                     </button>
 
+                    <!-- Add Button -->
+                    <button class="add-btn" @click="showForm = true" aria-label="Add website">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" fill="currentColor" stroke="none" />
+                        </svg>
+                        Add Site
+                    </button>
+
                     <!-- Theme Toggle -->
                     <button class="theme-toggle" @click="toggleTheme" aria-label="Toggle theme">
                         <svg v-if="isDark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -117,8 +125,94 @@
             </div>
         </div>
 
+        <!-- ── ADD FORM PAGE ──────────────────────────── -->
+        <div class="form-page" v-if="showForm">
+            <div class="form-page-inner">
+                <div class="form-page-header">
+                    <div>
+                        <h2>Add New Website</h2>
+                        <p>Fill in the details below to add a new site to your collection.</p>
+                    </div>
+                    <button class="form-close" @click="closeForm" aria-label="Close">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+                        </svg>
+                        Back
+                    </button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Website Name</label>
+                        <input class="form-input" :class="{ 'input-error': errors.websiteName }" type="text" v-model="form.websiteName" placeholder="e.g. GitHub" />
+                        <span class="error-msg" v-if="errors.websiteName">Website name is required</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Website URL</label>
+                        <input class="form-input" :class="{ 'input-error': errors.websiteUrl }" type="text" v-model="form.websiteUrl" placeholder="https://example.com" />
+                        <span class="error-msg" v-if="errors.websiteUrl">Valid URL is required</span>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Website Description</label>
+                        <input class="form-input" :class="{ 'input-error': errors.websiteDesc }" type="text" v-model="form.websiteDesc" placeholder="Short description" />
+                        <span class="error-msg" v-if="errors.websiteDesc">Description is required</span>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Thumbnail Image</label>
+                        <label class="upload-label" :class="{ 'upload-error': errors.imageFile, 'upload-has-file': form.imageFile }" for="imageFile">
+                            <div class="upload-icon-wrap">
+                                <svg v-if="!form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke-linecap="round" stroke-linejoin="round" />
+                                    <polyline points="17 8 12 3 7 8" stroke-linecap="round" stroke-linejoin="round" />
+                                    <line x1="12" y1="3" x2="12" y2="15" stroke-linecap="round" />
+                                </svg>
+                                <svg v-if="form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round" />
+                                    <polyline points="22 4 12 14.01 9 11.01" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <span class="upload-title" v-if="!form.imageFile">Click to upload image</span>
+                                <span class="upload-title file-name" v-else>{{ form.imageFile.name }}</span>
+                                <span class="upload-hint" v-if="!form.imageFile">PNG, JPG, WEBP supported</span>
+                            </div>
+                            <input type="file" id="imageFile" accept="image/*" @change="onFileChange" style="display:none" />
+                        </label>
+                        <span class="error-msg" v-if="errors.imageFile">Please select an image</span>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="form-group form-group-full" v-if="form.previewUrl">
+                        <label>Preview</label>
+                        <div class="img-preview-wrap">
+                            <img :src="form.previewUrl" class="img-preview" alt="Preview" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-status" :class="{ 'status-error': formStatus.isError }" v-if="formStatus.msg">{{ formStatus.msg }}</div>
+
+                <div class="form-actions">
+                    <button class="cancel-btn" @click="closeForm" :disabled="formSubmitting">Cancel</button>
+                    <button class="submit-btn" @click="handleSubmit" :disabled="formSubmitting">
+                        <svg v-if="!formSubmitting" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" />
+                            <polyline points="17 21 17 13 7 13 7 21" stroke-linecap="round" stroke-linejoin="round" />
+                            <polyline points="7 3 7 8 15 8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span v-if="!formSubmitting">Save Website</span>
+                        <span v-else class="submitting-dots">Saving<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ── CONTENT ─────────────────────────────────── -->
-        <div class="page-wrapper">
+        <div class="page-wrapper" v-show="!showForm">
 
             <!-- Page Loader -->
             <div class="page-loader" v-if="loading">
