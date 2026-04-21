@@ -34,11 +34,15 @@ var vm = new Vue({
     computed: {
         filtered() {
             const q = this.query.trim().toLowerCase();
-            if (!q) return this.websites;
-            return this.websites.filter(item =>
-                (item['Website Name'] || '').toLowerCase().includes(q) ||
-                (item['Website Desc'] || '').toLowerCase().includes(q) ||
-                (item['Website URL'] || '').toLowerCase().includes(q)
+            const list = q
+                ? this.websites.filter(item =>
+                    (item['Website Name'] || '').toLowerCase().includes(q) ||
+                    (item['Website Desc'] || '').toLowerCase().includes(q) ||
+                    (item['Website URL'] || '').toLowerCase().includes(q)
+                )
+                : this.websites.slice();
+            return list.sort((a, b) =>
+                (a['Website Name'] || '').localeCompare(b['Website Name'] || '')
             );
         }
     },
