@@ -240,7 +240,7 @@
                     <!-- Image -->
                     <div class="card-img-wrap">
                         <div class="img-skeleton" :class="{ hidden: item._loaded }"></div>
-                        <img :src="convertDriveUrl(item['Thumbnail URL'])" :alt="item['Website Name']"
+                        <img :src="item['Thumbnail URL']" :alt="item['Website Name']"
                             :class="{ loaded: item._loaded }" @load="onImgLoad(item)" @error="onImgError(item)" />
                     </div>
 

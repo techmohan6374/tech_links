@@ -57,13 +57,6 @@ var vm = new Vue({
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('wc-theme', theme);
         },
-
-        convertDriveUrl(url) {
-            if (!url) return '';
-            const idMatch = url.match(/[-\w]{25,}/);
-            return idMatch ? `https://lh3.googleusercontent.com/d/${idMatch[0]}` : url;
-        },
-
         onImgLoad(item) {
             this.$set(item, '_loaded', true);
         },
