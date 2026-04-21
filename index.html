@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mohan Tech Links</title>
-
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -17,9 +17,418 @@
 
     <link rel="stylesheet" href="css/style.css">
 
+    <style>
+        /* ── SECRET KEY OVERLAY ─────────────────────── */
+        #secret-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: linear-gradient(135deg, #0c0a14 0%, #13101f 50%, #1c1830 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #secret-overlay::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        #secret-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.15);
+            }
+        }
+
+        .sk-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 460px;
+            margin: 1.5rem;
+            background: rgba(19, 16, 31, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            border-radius: 24px;
+            padding: 3rem 2.5rem 2.5rem;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(124, 58, 237, 0.08);
+            backdrop-filter: blur(20px);
+            animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(32px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .sk-lock-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.75rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(168, 85, 247, 0.15));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            animation: lockBounce 2.5s ease-in-out infinite;
+        }
+
+        @keyframes lockBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .sk-lock-icon svg {
+            color: #a855f7;
+            filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+        }
+
+        .sk-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.9rem;
+            color: #ece8ff;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .sk-subtitle {
+            font-size: 0.9rem;
+            color: #9590b0;
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .sk-input-wrap {
+            position: relative;
+            margin-bottom: 1.25rem;
+        }
+
+        .sk-input {
+            width: 100%;
+            padding: 1.05rem 3.2rem 1.05rem 1.25rem;
+            font-size: 1.25rem;
+            font-family: 'DM Mono', 'Courier New', monospace;
+            letter-spacing: 0.15em;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(124, 58, 237, 0.3);
+            border-radius: 14px;
+            color: #ece8ff;
+            outline: none;
+            transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+            text-align: center;
+        }
+
+        .sk-input::placeholder {
+            color: #524d6a;
+            letter-spacing: 0.05em;
+            font-size: 1rem;
+        }
+
+        .sk-input:focus {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.06);
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), 0 0 20px rgba(168, 85, 247, 0.1);
+        }
+
+        .sk-input.sk-input-error {
+            border-color: #f43f5e;
+            box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15);
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translateX(-3px);
+            }
+
+            20%,
+            80% {
+                transform: translateX(5px);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translateX(-5px);
+            }
+
+            40%,
+            60% {
+                transform: translateX(5px);
+            }
+        }
+
+        .sk-eye-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #524d6a;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .sk-eye-btn:hover {
+            color: #a855f7;
+        }
+
+        .sk-error-box {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        .sk-error-box.visible {
+            display: flex;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sk-error-box svg {
+            color: #f43f5e;
+            flex-shrink: 0;
+        }
+
+        .sk-error-text {
+            font-size: 0.875rem;
+            color: #fda4af;
+            flex: 1;
+        }
+
+        .sk-submit-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .sk-submit-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px rgba(124, 58, 237, 0.55);
+        }
+
+        .sk-submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .sk-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sk-retry-btn {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.925rem;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            background: transparent;
+            color: #9590b0;
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .sk-retry-btn:hover {
+            color: #ece8ff;
+            border-color: rgba(168, 85, 247, 0.3);
+            background: rgba(168, 85, 247, 0.06);
+        }
+
+        /* Success fade-out */
+        #secret-overlay.fade-out {
+            animation: overlayFadeOut 0.55s ease forwards;
+        }
+
+        @keyframes overlayFadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
+
+        /* Floating particles */
+        .sk-particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(168, 85, 247, 0.35);
+            animation: floatUp linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(-100vh) scale(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+
 </head>
 
 <body>
+
+    <!-- ── SECRET KEY OVERLAY ──────────────────────── -->
+    <div id="secret-overlay">
+        <!-- Particles -->
+        <div class="sk-particle"
+            style="width:6px;height:6px;left:15%;bottom:0;animation-duration:8s;animation-delay:0s"></div>
+        <div class="sk-particle"
+            style="width:4px;height:4px;left:35%;bottom:0;animation-duration:11s;animation-delay:2s"></div>
+        <div class="sk-particle"
+            style="width:8px;height:8px;left:55%;bottom:0;animation-duration:9s;animation-delay:1s"></div>
+        <div class="sk-particle"
+            style="width:5px;height:5px;left:75%;bottom:0;animation-duration:13s;animation-delay:3s"></div>
+        <div class="sk-particle"
+            style="width:4px;height:4px;left:88%;bottom:0;animation-duration:10s;animation-delay:0.5s"></div>
+        <div class="sk-particle"
+            style="width:7px;height:7px;left:5%;bottom:0;animation-duration:12s;animation-delay:4s"></div>
+
+        <div class="sk-card">
+            <!-- Lock icon -->
+            <div class="sk-lock-icon">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="11" width="18" height="11" rx="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <h1 class="sk-title">Secret Access</h1>
+            <p class="sk-subtitle">Enter your secret key to unlock<br>the application</p>
+
+            <!-- Error box -->
+            <div class="sk-error-box" id="sk-error-box">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4m0 4h.01" stroke-linecap="round" />
+                </svg>
+                <span class="sk-error-text" id="sk-error-text">Wrong secret key. Please try again.</span>
+            </div>
+
+            <!-- Input -->
+            <div class="sk-input-wrap">
+                <input class="sk-input" id="sk-input" type="password" placeholder="Enter secret key…" autocomplete="off"
+                    spellcheck="false" />
+                <button class="sk-eye-btn" id="sk-eye-btn" type="button" aria-label="Toggle visibility">
+                    <svg id="sk-eye-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Submit -->
+            <button class="sk-submit-btn" id="sk-submit-btn" type="button">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Unlock
+            </button>
+
+            <!-- Retry (shown only on error) -->
+            <button class="sk-retry-btn" id="sk-retry-btn" type="button" style="display:none">
+                ↺ &nbsp; Try a different key
+            </button>
+        </div>
+    </div>
 
     <div id="app">
 
@@ -96,8 +505,11 @@
 
                     <!-- Add Button -->
                     <button class="add-btn" @click="showForm = true" aria-label="Add website">
-                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" fill="currentColor" stroke="none" />
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.2">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"
+                                fill="currentColor" stroke="none" />
                         </svg>
                         Add Site
                     </button>
@@ -121,6 +533,18 @@
                         </div>
                         {{ isDark ? 'Light' : 'Dark' }}
                     </button>
+
+                    <!-- Logout -->
+                    <button class="icon-btn logout-btn" @click="logout" aria-label="Logout">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <polyline points="16 17 21 12 16 7" stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="21" y1="12" x2="9" y2="12" stroke-linecap="round" />
+                        </svg>
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>
@@ -134,7 +558,8 @@
                         <p>Fill in the details below to add a new site to your collection.</p>
                     </div>
                     <button class="form-close" @click="closeForm" aria-label="Back">
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.5">
                             <path d="M19 12H5M12 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         Back
@@ -142,73 +567,89 @@
                 </div>
 
                 <div class="form-card">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Website Name</label>
-                        <input class="form-input" :class="{ 'input-error': errors.websiteName }" type="text" v-model="form.websiteName" placeholder="e.g. GitHub" />
-                        <span class="error-msg" v-if="errors.websiteName">Website name is required</span>
-                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Website Name</label>
+                            <input class="form-input" :class="{ 'input-error': errors.websiteName }" type="text"
+                                v-model="form.websiteName" placeholder="e.g. GitHub" />
+                            <span class="error-msg" v-if="errors.websiteName">Website name is required</span>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Website URL</label>
-                        <input class="form-input" :class="{ 'input-error': errors.websiteUrl }" type="text" v-model="form.websiteUrl" placeholder="https://example.com" />
-                        <span class="error-msg" v-if="errors.websiteUrl">Valid URL is required</span>
-                    </div>
+                        <div class="form-group">
+                            <label>Website URL</label>
+                            <input class="form-input" :class="{ 'input-error': errors.websiteUrl }" type="text"
+                                v-model="form.websiteUrl" placeholder="https://example.com" />
+                            <span class="error-msg" v-if="errors.websiteUrl">Valid URL is required</span>
+                        </div>
 
-                    <div class="form-group form-group-full">
-                        <label>Website Description</label>
-                        <input class="form-input" :class="{ 'input-error': errors.websiteDesc }" type="text" v-model="form.websiteDesc" placeholder="Short description" />
-                        <span class="error-msg" v-if="errors.websiteDesc">Description is required</span>
-                    </div>
+                        <div class="form-group form-group-full">
+                            <label>Website Description</label>
+                            <input class="form-input" :class="{ 'input-error': errors.websiteDesc }" type="text"
+                                v-model="form.websiteDesc" placeholder="Short description" />
+                            <span class="error-msg" v-if="errors.websiteDesc">Description is required</span>
+                        </div>
 
-                    <div class="form-group form-group-full">
-                        <label>Thumbnail Image</label>
-                        <label class="upload-label" :class="{ 'upload-error': errors.imageFile, 'upload-has-file': form.imageFile }" for="imageFile">
-                            <div class="upload-icon-wrap">
-                                <svg v-if="!form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke-linecap="round" stroke-linejoin="round" />
-                                    <polyline points="17 8 12 3 7 8" stroke-linecap="round" stroke-linejoin="round" />
-                                    <line x1="12" y1="3" x2="12" y2="15" stroke-linecap="round" />
-                                </svg>
-                                <svg v-if="form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round" />
-                                    <polyline points="22 4 12 14.01 9 11.01" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
+                        <div class="form-group form-group-full">
+                            <label>Thumbnail Image</label>
+                            <label class="upload-label"
+                                :class="{ 'upload-error': errors.imageFile, 'upload-has-file': form.imageFile }"
+                                for="imageFile">
+                                <div class="upload-icon-wrap">
+                                    <svg v-if="!form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="1.5">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <polyline points="17 8 12 3 7 8" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <line x1="12" y1="3" x2="12" y2="15" stroke-linecap="round" />
+                                    </svg>
+                                    <svg v-if="form.imageFile" width="32" height="32" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="1.5">
+                                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <polyline points="22 4 12 14.01 9 11.01" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                                <div class="upload-text">
+                                    <span class="upload-title" v-if="!form.imageFile">Click to upload image</span>
+                                    <span class="upload-title file-name" v-else>{{ form.imageFile.name }}</span>
+                                    <span class="upload-hint" v-if="!form.imageFile">PNG, JPG, WEBP supported</span>
+                                </div>
+                                <input type="file" id="imageFile" accept="image/*" @change="onFileChange"
+                                    style="display:none" />
+                            </label>
+                            <span class="error-msg" v-if="errors.imageFile">Please select an image</span>
+                        </div>
+
+                        <!-- Preview -->
+                        <div class="form-group form-group-full" v-if="form.previewUrl">
+                            <label>Preview</label>
+                            <div class="img-preview-wrap">
+                                <img :src="form.previewUrl" class="img-preview" alt="Preview" />
                             </div>
-                            <div class="upload-text">
-                                <span class="upload-title" v-if="!form.imageFile">Click to upload image</span>
-                                <span class="upload-title file-name" v-else>{{ form.imageFile.name }}</span>
-                                <span class="upload-hint" v-if="!form.imageFile">PNG, JPG, WEBP supported</span>
-                            </div>
-                            <input type="file" id="imageFile" accept="image/*" @change="onFileChange" style="display:none" />
-                        </label>
-                        <span class="error-msg" v-if="errors.imageFile">Please select an image</span>
-                    </div>
-
-                    <!-- Preview -->
-                    <div class="form-group form-group-full" v-if="form.previewUrl">
-                        <label>Preview</label>
-                        <div class="img-preview-wrap">
-                            <img :src="form.previewUrl" class="img-preview" alt="Preview" />
                         </div>
                     </div>
-                </div>
 
-                <!-- Status -->
-                <div class="form-status" :class="{ 'status-error': formStatus.isError }" v-if="formStatus.msg">{{ formStatus.msg }}</div>
+                    <!-- Status -->
+                    <div class="form-status" :class="{ 'status-error': formStatus.isError }" v-if="formStatus.msg">{{
+                        formStatus.msg }}</div>
 
                 </div><!-- /.form-card -->
 
                 <div class="form-actions">
                     <button class="cancel-btn" @click="closeForm" :disabled="formSubmitting">Cancel</button>
                     <button class="submit-btn" @click="handleSubmit" :disabled="formSubmitting">
-                        <svg v-if="!formSubmitting" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" />
+                        <svg v-if="!formSubmitting" width="15" height="15" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke-linecap="round"
+                                stroke-linejoin="round" />
                             <polyline points="17 21 17 13 7 13 7 21" stroke-linecap="round" stroke-linejoin="round" />
                             <polyline points="7 3 7 8 15 8" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         <span v-if="!formSubmitting">Save Website</span>
-                        <span v-else class="submitting-dots">Saving<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+                        <span v-else class="submitting-dots">Saving<span class="dot">.</span><span
+                                class="dot">.</span><span class="dot">.</span></span>
                     </button>
                 </div>
             </div>
@@ -243,8 +684,8 @@
                     <!-- Image -->
                     <div class="card-img-wrap">
                         <div class="img-skeleton" :class="{ hidden: item._loaded }"></div>
-                        <img :src="item['Thumbnail URL']" :alt="item['Website Name']"
-                            :class="{ loaded: item._loaded }" @load="onImgLoad(item)" @error="onImgError(item)" />
+                        <img :src="item['Thumbnail URL']" :alt="item['Website Name']" :class="{ loaded: item._loaded }"
+                            @load="onImgLoad(item)" @error="onImgError(item)" />
                     </div>
 
                     <!-- Body -->
@@ -289,7 +730,145 @@
         </div>
     </div>
 
-    <script src="js/script.js"></script>
+    <script>
+        var encodedText = "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";
+
+        (function () {
+            // Save the original #app template BEFORE Vue ever mounts on it
+            var appEl = document.getElementById('app');
+            var originalAppHTML = appEl.innerHTML;
+
+            var overlay = document.getElementById('secret-overlay');
+            var input = document.getElementById('sk-input');
+            var submitBtn = document.getElementById('sk-submit-btn');
+            var retryBtn = document.getElementById('sk-retry-btn');
+            var errorBox = document.getElementById('sk-error-box');
+            var errorText = document.getElementById('sk-error-text');
+            var eyeBtn = document.getElementById('sk-eye-btn');
+            var eyeIcon = document.getElementById('sk-eye-icon');
+
+            // Focus input on load
+            setTimeout(function () { input.focus(); }, 400);
+
+            // Toggle password visibility
+            eyeBtn.addEventListener('click', function () {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>';
+                } else {
+                    input.type = 'password';
+                    eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/>';
+                }
+            });
+
+            function showError(msg) {
+                errorText.textContent = msg;
+                errorBox.classList.add('visible');
+                input.classList.add('sk-input-error');
+                retryBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+                setTimeout(function () { input.classList.remove('sk-input-error'); }, 600);
+            }
+
+            function resetToInput() {
+                errorBox.classList.remove('visible');
+                input.value = '';
+                retryBtn.style.display = 'none';
+                submitBtn.style.display = 'flex';
+                input.focus();
+            }
+
+            function attemptUnlock() {
+                var secretKey = input.value.trim();
+                if (!secretKey) {
+                    showError('Please enter your secret key.');
+                    return;
+                }
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span>';
+
+                // small delay for UX feedback
+                setTimeout(function () {
+                    try {
+                        var bytes = CryptoJS.AES.decrypt(encodedText, secretKey);
+                        var decryptedScript = bytes.toString(CryptoJS.enc.Utf8);
+                        if (!decryptedScript) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Unlock';
+                            showError('Wrong secret key. Please try again.');
+                            return;
+                        }
+                        // Success — inject logout mixin once before the app script runs
+                        if (!window.__mixinRegistered) {
+                            window.__mixinRegistered = true;
+                            Vue.mixin({
+                                methods: {
+                                    logout: function () {
+                                        if (!confirm('Are you sure you want to logout?')) return;
+                                        // Destroy the Vue instance
+                                        if (window.__vueApp) {
+                                            window.__vueApp.$destroy();
+                                            window.__vueApp = null;
+                                        }
+                                        // Remove the injected decrypted script tag
+                                        if (window.__injectedScript && window.__injectedScript.parentNode) {
+                                            window.__injectedScript.parentNode.removeChild(window.__injectedScript);
+                                            window.__injectedScript = null;
+                                        }
+                                        // Restore original template HTML and clear Vue's internal
+                                        // __vue__ reference so it can re-mount cleanly next login.
+                                        var currentApp = document.getElementById('app');
+                                        currentApp.innerHTML = originalAppHTML;
+                                        if (currentApp.__vue__) {
+                                            currentApp.__vue__ = null;
+                                        }
+                                        // Reset and show the overlay
+                                        var ov = document.getElementById('secret-overlay');
+                                        ov.style.display = '';
+                                        ov.classList.remove('fade-out');
+                                        ov.style.opacity = '';
+                                        document.getElementById('sk-input').value = '';
+                                        document.getElementById('sk-error-box').classList.remove('visible');
+                                        document.getElementById('sk-retry-btn').style.display = 'none';
+                                        var sb = document.getElementById('sk-submit-btn');
+                                        sb.style.display = 'flex';
+                                        sb.disabled = false;
+                                        sb.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Unlock';
+                                        setTimeout(function () { document.getElementById('sk-input').focus(); }, 100);
+                                    }
+                                }
+                            });
+                        }
+                        var script = document.createElement('script');
+                        script.innerHTML = decryptedScript.replace(
+                            'new Vue(',
+                            'window.__vueApp = new Vue('
+                        );
+                        window.__injectedScript = script;
+                        document.body.appendChild(script);
+                        overlay.classList.add('fade-out');
+                        setTimeout(function () { overlay.style.display = 'none'; }, 560);
+                    } catch (e) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Unlock';
+                        showError('Wrong secret key. Please try again.');
+                    }
+                }, 500);
+            }
+
+            submitBtn.addEventListener('click', attemptUnlock);
+            retryBtn.addEventListener('click', resetToInput);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') attemptUnlock();
+            });
+
+            // Inject spinner keyframe
+            var style = document.createElement('style');
+            style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+        })();
+
+    </script>
 </body>
 
 </html>

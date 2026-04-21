@@ -585,6 +585,16 @@
         animation: spin 0.7s linear infinite;
     }
 
+    .logout-btn {
+        color: #e11d48 !important;
+        border-color: rgba(225, 29, 72, 0.25) !important;
+    }
+    .logout-btn:hover {
+        background: rgba(225, 29, 72, 0.08) !important;
+        border-color: rgba(225, 29, 72, 0.5) !important;
+        color: #f43f5e !important;
+    }
+
     /* Copy Button */
     .copy-btn {
         display: inline-flex;
